@@ -265,20 +265,23 @@ def export_set():
         data = request.json
         set_data = data.get("set_data", {})
         theme = data.get("theme", "")
+        set_concept = data.get("set_concept", {})
         export_format = data.get("format", "json")
 
         if not set_data:
             return jsonify({"error": "Set data is required"}), 400
 
         if export_format == "json":
-            export_content = set_exporter.export_to_json(set_data, theme)
-            return export_content, 200, {"Content-Type": "application/json"}
+            export_content = set_exporter.export_to_json(set_data, theme, set_concept)
+            return Response(export_content, mimetype="application/json")
         elif export_format == "csv":
-            export_content = set_exporter.export_to_csv(set_data, theme)
-            return export_content, 200, {"Content-Type": "text/csv"}
+            set_name = set_concept.get("name", theme) if set_concept else theme
+            export_content = set_exporter.export_to_csv(set_data, set_name)
+            return Response(export_content, mimetype="text/csv")
         elif export_format == "cockatrice":
-            export_content = set_exporter.export_to_cockatrice(set_data, theme)
-            return export_content, 200, {"Content-Type": "application/xml"}
+            set_name = set_concept.get("name", theme) if set_concept else theme
+            export_content = set_exporter.export_to_cockatrice(set_data, set_name)
+            return Response(export_content, mimetype="application/xml")
         else:
             return (
                 jsonify(

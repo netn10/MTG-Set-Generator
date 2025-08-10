@@ -12,15 +12,26 @@ class SetExporter:
     def __init__(self):
         pass
 
-    def export_to_json(self, set_data, theme, metadata=None):
+    def export_to_json(self, set_data, theme, set_concept=None):
         """Export set to JSON format"""
         export_data = {
             "theme": theme,
             "created_at": datetime.now().isoformat(),
-            "metadata": metadata or {},
             "total_cards": self._count_cards(set_data),
             "cards": self._flatten_set_data(set_data),
         }
+
+        # Include set concept information if available
+        if set_concept:
+            export_data["set_concept"] = {
+                "name": set_concept.get("name", ""),
+                "description": set_concept.get("description", ""),
+                "mechanics": set_concept.get("mechanics", []),
+                "archetypes": set_concept.get("archetypes", []),
+                "flavor_themes": set_concept.get("flavor_themes", []),
+                "design_notes": set_concept.get("design_notes", ""),
+            }
+
         return json.dumps(export_data, indent=2)
 
     def export_to_csv(self, set_data, theme):

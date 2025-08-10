@@ -12,7 +12,11 @@ function App() {
   const [commons, setCommons] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [darkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(true);
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
 
   const generateSet = async () => {
     if (!theme.trim()) {
@@ -61,10 +65,21 @@ function App() {
   };
 
   return (
-    <div className="App">
+    <div className={`App ${darkMode ? 'dark-mode' : 'light-mode'}`}>
       <header className="App-header">
-        <h1>Magic: The Gathering Set Generator</h1>
-        <p>Professional set design using Mark Rosewater's skeleton framework</p>
+        <div className="header-top">
+          <div className="header-content">
+            <h1>Magic: The Gathering Set Generator</h1>
+            <p>Professional set design using Mark Rosewater's skeleton framework</p>
+          </div>
+          <button 
+            className="dark-mode-toggle"
+            onClick={toggleDarkMode}
+            aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {darkMode ? '☀️' : '🌙'}
+          </button>
+        </div>
         
         <nav className="app-nav">
           <button 

@@ -665,6 +665,7 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
       const response = await axios.post('/api/export-set', {
         set_data: currentSet,
         theme: theme,
+        set_concept: setConcept,
         format: format
       });
       
@@ -679,16 +680,32 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
       const extension = extensions[format] || 'json';
       const mimeType = mimeTypes[format] || 'application/json';
       
+      // Get the proper filename - use set concept name if available, otherwise theme
+      const conceptName = setConcept?.name || theme || 'MTG_Set';
+      const filename = `${conceptName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_')}.${extension}`;
+      
+      // Handle the response data properly
+      let exportData;
+      if (format === 'json') {
+        // For JSON, the response.data is already a string from the backend
+        exportData = typeof response.data === 'string' ? response.data : JSON.stringify(response.data, null, 2);
+      } else {
+        // For CSV and XML, response.data should be a string
+        exportData = response.data;
+      }
+      
       // Create download link
-      const blob = new Blob([response.data], { type: mimeType });
+      const blob = new Blob([exportData], { type: mimeType });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${theme.replace(/\s+/g, '_')}_set.${extension}`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      
+      console.log(`✅ Set exported successfully as ${filename}`);
       
     } catch (error) {
       console.error('Failed to export set:', error);

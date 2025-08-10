@@ -1,8 +1,11 @@
 .set-builder {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 1.5rem;
   transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 /* Dark mode styles */
@@ -113,11 +116,12 @@ body.dark-mode {
 }
 
 .builder-header {
-  background: #f8f9fa;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  border: 1px solid #dee2e6;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 2rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .header-top {
@@ -557,10 +561,13 @@ body.dark-mode {
 }
 
 .color-section {
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  padding: 20px;
-  background: white;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
 }
 
 .color-title {
@@ -602,28 +609,48 @@ body.dark-mode {
 
 .slots-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
   align-items: start;
+  justify-content: center;
+  padding: 1rem 0;
 }
 
 .slot-card {
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  padding: 16px;
-  background: #ffffff;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
   height: fit-content;
-  min-height: 180px;
+  min-height: 200px;
+  position: relative;
+  overflow: hidden;
+}
+
+.slot-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.6s;
+}
+
+.slot-card:hover::before {
+  left: 100%;
 }
 
 .slot-card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-  border-color: #007bff;
-  transform: translateY(-1px);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+  border-color: rgba(102, 126, 234, 0.6);
+  transform: translateY(-4px) scale(1.02);
 }
 
 .slot-header {
@@ -997,38 +1024,132 @@ body:not(.dark-mode) .color-white .card-type-title {
   color: #d4a574;
 }
 
+/* Enhanced Responsive Design */
+@media (max-width: 1200px) {
+  .set-builder {
+    padding: 1.25rem;
+  }
+  
+  .slots-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.25rem;
+  }
+}
+
 @media (max-width: 768px) {
+  .set-builder {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+  
+  .builder-header {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+  
   .slots-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 1rem;
   }
   
   .slot-card {
-    min-height: 160px;
+    min-height: 180px;
+    padding: 1.25rem;
+    border-radius: 12px;
+  }
+  
+  .color-section {
+    padding: 1.5rem;
+    border-radius: 16px;
   }
   
   .builder-actions {
     flex-direction: column;
-    gap: 8px;
+    gap: 1rem;
   }
   
   .export-dropdown {
     flex-direction: column;
     width: 100%;
+    gap: 0.75rem;
   }
   
   .export-button, .generate-all-button {
     width: 100%;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
   }
   
   .color-filter {
     justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .color-filter button {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .header-top {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .header-controls {
+    justify-content: center;
+    flex-wrap: wrap;
   }
 }
 
-@media (min-width: 769px) and (max-width: 1200px) {
+@media (max-width: 480px) {
+  .set-builder {
+    padding: 0.75rem;
+  }
+  
+  .builder-header {
+    padding: 1.25rem;
+  }
+  
+  .slot-card {
+    padding: 1rem;
+    min-height: 160px;
+  }
+  
+  .color-section {
+    padding: 1.25rem;
+  }
+  
+  .color-filter {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .color-filter button {
+    width: 100%;
+    max-width: 200px;
+  }
+}
+
+/* Improved grid layouts for different screen sizes */
+@media (min-width: 769px) and (max-width: 1024px) {
   .slots-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1400px) {
+  .slots-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1401px) {
+  .slots-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
   }
 }/* Integr
 ated Concept Builder Styles */
@@ -1164,4 +1285,160 @@ ated Concept Builder Styles */
   background: #6c757d;
   cursor: not-allowed;
   transform: none;
+}/*
+ Enhanced Animations and Visual Effects */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.color-section {
+  animation: slideInUp 0.6s ease-out;
+}
+
+.color-section:nth-child(even) {
+  animation-delay: 0.1s;
+}
+
+.slot-card {
+  animation: fadeInScale 0.5s ease-out;
+}
+
+.generated-card {
+  animation: slideInUp 0.4s ease-out;
+}
+
+/* Enhanced button styles */
+.generate-all-button,
+.export-button {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.generate-all-button::before,
+.export-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.generate-all-button:hover::before,
+.export-button:hover::before {
+  left: 100%;
+}
+
+.generate-all-button:hover:not(:disabled),
+.export-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Enhanced progress bars */
+.progress-bar,
+.batch-progress-bar {
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill,
+.batch-progress-fill {
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill::after,
+.batch-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    transparent 25%, 
+    rgba(255, 255, 255, 0.2) 25%, 
+    rgba(255, 255, 255, 0.2) 50%, 
+    transparent 50%, 
+    transparent 75%, 
+    rgba(255, 255, 255, 0.2) 75%);
+  background-size: 20px 20px;
+  animation: progressStripes 1s linear infinite;
+}
+
+@keyframes progressStripes {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 20px 0;
+  }
+}
+
+/* Enhanced focus states */
+.generate-button:focus,
+.generate-all-button:focus,
+.export-button:focus {
+  outline: 3px solid rgba(102, 126, 234, 0.6);
+  outline-offset: 2px;
+}
+
+/* Loading states */
+.slot-card.loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.empty-slot.generating {
+  background: linear-gradient(135deg, 
+    rgba(102, 126, 234, 0.1), 
+    rgba(118, 75, 162, 0.1));
+  border-color: rgba(102, 126, 234, 0.5);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Improved dark mode transitions */
+.set-builder,
+.slot-card,
+.color-section,
+.builder-header {
+  transition: background-color 0.3s ease, 
+              border-color 0.3s ease, 
+              color 0.3s ease,
+              box-shadow 0.3s ease;
 }
