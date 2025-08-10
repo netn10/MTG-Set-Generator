@@ -1,0 +1,20 @@
+{
+  "name": "mtg-set-generator-fullstack",
+  "version": "1.0.0",
+  "description": "Magic: The Gathering Set Generator - Full Stack Application",
+  "scripts": {
+    "setup": "npm run setup:backend && npm run setup:frontend",
+    "setup:backend": "cd backend && pip install -r requirements.txt",
+    "setup:frontend": "cd frontend && npm install",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "cd backend && python app.py",
+    "start:frontend": "cd frontend && npm start",
+    "dev": "npm start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "keywords": ["magic-the-gathering", "card-generator", "react", "flask", "openai"],
+  "author": "",
+  "license": "MIT"
+}

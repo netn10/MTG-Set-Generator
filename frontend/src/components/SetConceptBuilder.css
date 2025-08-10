@@ -1,0 +1,516 @@
+.set-concept-builder {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.concept-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.concept-header h2 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.concept-header p {
+  color: #7f8c8d;
+  font-size: 16px;
+}
+
+/* Pitch Input Section */
+.pitch-input-section {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.pitch-input {
+  margin-bottom: 20px;
+}
+
+.pitch-input label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #2c3e50;
+}
+
+.pitch-input textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.pitch-input textarea:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.generate-concept-button {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.generate-concept-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2980b9, #1f5f8b);
+  transform: translateY(-1px);
+}
+
+.generate-concept-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Concept Display */
+.concept-display {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.concept-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.concept-actions button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.edit-toggle-button {
+  background: #f39c12;
+  color: white;
+}
+
+.edit-toggle-button:hover {
+  background: #d68910;
+}
+
+.new-concept-button {
+  background: #95a5a6;
+  color: white;
+}
+
+.new-concept-button:hover {
+  background: #7f8c8d;
+}
+
+.proceed-button {
+  background: linear-gradient(135deg, #27ae60, #229954);
+  color: white;
+  margin-left: auto;
+}
+
+.proceed-button:hover {
+  background: linear-gradient(135deg, #229954, #1e8449);
+}
+
+/* Concept Fields */
+.concept-field {
+  margin-bottom: 30px;
+}
+
+.concept-field h3 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+  font-size: 20px;
+  border-bottom: 2px solid #ecf0f1;
+  padding-bottom: 8px;
+}
+
+.concept-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.concept-description {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #34495e;
+  margin: 0;
+}
+
+.mechanics-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.mechanics-list li {
+  background: #3498db;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* Archetype Status Tracker */
+.archetype-status {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.color-pair-tracker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.color-pair-indicator {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+
+.color-pair-indicator.present {
+  background: #28a745;
+  color: white;
+}
+
+.color-pair-indicator.missing {
+  background: #dc3545;
+  color: white;
+  animation: pulse-missing 2s ease-in-out infinite;
+}
+
+@keyframes pulse-missing {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.archetype-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+}
+
+/* Archetypes */
+.archetypes-display {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.archetype-card {
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  padding: 20px;
+  transition: transform 0.2s;
+}
+
+.archetype-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.archetype-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.archetype-colors {
+  background: #e74c3c;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.archetype-name {
+  font-weight: 700;
+  font-size: 18px;
+  color: #2c3e50;
+}
+
+.archetype-description {
+  color: #34495e;
+  line-height: 1.5;
+  margin: 0 0 12px 0;
+}
+
+.key-cards {
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+/* Edit Mode */
+.edit-input, .edit-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid #e1e8ed;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.edit-input:focus, .edit-textarea:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.mechanics-edit, .archetypes-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mechanic-edit, .archetype-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.mechanic-edit {
+  flex-direction: row;
+  align-items: center;
+}
+
+.archetype-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.colors-input {
+  width: 80px;
+}
+
+.name-input {
+  flex: 1;
+}
+
+.remove-button {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-button:hover {
+  background: #c0392b;
+}
+
+.add-button {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  align-self: flex-start;
+}
+
+.add-button:hover {
+  background: #229954;
+}
+
+.archetype-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.fill-button {
+  background: #17a2b8;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.fill-button:hover:not(:disabled) {
+  background: #138496;
+}
+
+.fill-button:disabled,
+.add-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.flavor-themes {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.flavor-themes li {
+  background: #9b59b6;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 14px;
+}
+
+.design-notes {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 16px;
+  color: #856404;
+  font-style: italic;
+  margin: 0;
+}
+
+/* Dark Mode */
+.set-concept-builder.dark-mode {
+  color: #e8e8e8;
+}
+
+.set-concept-builder.dark-mode .concept-header h2 {
+  color: #e8e8e8;
+}
+
+.set-concept-builder.dark-mode .concept-header p {
+  color: #b0b0b0;
+}
+
+.set-concept-builder.dark-mode .pitch-input-section,
+.set-concept-builder.dark-mode .concept-display {
+  background: #2c2c2c;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.set-concept-builder.dark-mode .pitch-input label,
+.set-concept-builder.dark-mode .concept-field h3,
+.set-concept-builder.dark-mode .concept-name,
+.set-concept-builder.dark-mode .archetype-name {
+  color: #e8e8e8;
+}
+
+.set-concept-builder.dark-mode .concept-field h3 {
+  border-bottom-color: #444;
+}
+
+.set-concept-builder.dark-mode .concept-description,
+.set-concept-builder.dark-mode .archetype-description {
+  color: #b0b0b0;
+}
+
+.set-concept-builder.dark-mode .pitch-input textarea,
+.set-concept-builder.dark-mode .edit-input,
+.set-concept-builder.dark-mode .edit-textarea {
+  background: #3c3c3c;
+  border-color: #555;
+  color: #e8e8e8;
+}
+
+.set-concept-builder.dark-mode .pitch-input textarea:focus,
+.set-concept-builder.dark-mode .edit-input:focus,
+.set-concept-builder.dark-mode .edit-textarea:focus {
+  border-color: #3498db;
+}
+
+.set-concept-builder.dark-mode .archetype-card,
+.set-concept-builder.dark-mode .mechanic-edit,
+.set-concept-builder.dark-mode .archetype-edit {
+  background: #3c3c3c;
+  border-color: #555;
+}
+
+.set-concept-builder.dark-mode .design-notes {
+  background: #4a4a2a;
+  border-color: #6a6a3a;
+  color: #d4d4aa;
+}
+
+.set-concept-builder.dark-mode .archetype-status {
+  background: #3c3c3c;
+  border-color: #555;
+}
+
+.set-concept-builder.dark-mode .archetype-count {
+  color: #b0b0b0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .set-concept-builder {
+    padding: 15px;
+  }
+  
+  .concept-actions {
+    flex-direction: column;
+  }
+  
+  .concept-actions button {
+    width: 100%;
+  }
+  
+  .proceed-button {
+    margin-left: 0;
+  }
+  
+  .archetypes-display {
+    grid-template-columns: 1fr;
+  }
+  
+  .archetype-header {
+    flex-wrap: wrap;
+  }
+  
+  .mechanics-list,
+  .flavor-themes {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
