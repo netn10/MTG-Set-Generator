@@ -12,7 +12,7 @@ function App() {
   const [commons, setCommons] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode] = useState(true);
 
   const generateSet = async () => {
     if (!theme.trim()) {

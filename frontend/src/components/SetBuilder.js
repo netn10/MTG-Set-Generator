@@ -9,7 +9,7 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
   const [currentSet, setCurrentSet] = useState({});
   const [theme, setTheme] = useState(initialTheme);
   const [selectedColor, setSelectedColor] = useState('white');
-  const [selectedRarity, setSelectedRarity] = useState('common');
+  // const [selectedRarity, setSelectedRarity] = useState('common');
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState({ completed: 0, total: 0 });
   const [setType, setSetType] = useState('full'); // 'full' or 'commons'
@@ -112,144 +112,10 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
       offCardGenerated(handleCardGenerated);
       offBatchCompleted(handleBatchCompleted);
     };
-  }, [isConnected]); // Simplified dependencies to prevent re-subscription loops
+  }, [isConnected, handleBatchCompleted, handleCardGenerated, offBatchCompleted, offCardGenerated, onBatchCompleted, onCardGenerated]);
 
-  useEffect(() => {
-    loadSkeleton();
-    // Load dark mode preference from localStorage, defaulting to true (dark mode)
-    const savedDarkMode = localStorage.getItem('darkMode');
-    setDarkMode(savedDarkMode !== null ? savedDarkMode === 'true' : true);
-  }, []);
-
-  // Update theme when initialTheme changes
-  useEffect(() => {
-    if (initialTheme && initialTheme !== theme) {
-      setTheme(initialTheme);
-      setShowConceptBuilder(false);
-      console.log('🎨 SetBuilder: Updated theme from concept:', initialTheme);
-    }
-  }, [initialTheme]);
-
-  // Update concept when initialConcept changes
-  useEffect(() => {
-    if (initialConcept && initialConcept !== concept) {
-      setConcept(initialConcept);
-      setShowConceptBuilder(false);
-      console.log('🎯 SetBuilder: Updated concept:', initialConcept.name);
-    }
-  }, [initialConcept]);
-
-  // Update dark mode when parent changes
-  useEffect(() => {
-    if (parentDarkMode !== undefined) {
-      setDarkMode(parentDarkMode);
-    }
-  }, [parentDarkMode]);
-
-  useEffect(() => {
-    // Apply dark mode class to body
-    document.body.classList.toggle('dark-mode', darkMode);
-    localStorage.setItem('darkMode', darkMode);
-  }, [darkMode]);
-
-  // Log loading state changes
-  useEffect(() => {
-    if (loading) {
-      console.log(`🔄 GENERATION STATE: Loading started`);
-      console.log(`🎯 Current progress: ${progress.completed}/${progress.total} cards`);
-      console.log(`📝 Theme: "${theme}"`);
-      console.log(`🎨 Set type: ${setType}`);
-    } else {
-      console.log(`⏸️  GENERATION STATE: Loading stopped`);
-      console.log(`🏁 Final progress: ${progress.completed}/${progress.total} cards`);
-    }
-  }, [loading]);
-
-  // Log progress changes
-  useEffect(() => {
-    console.log(`📈 PROGRESS CHANGE: ${progress.completed}/${progress.total} cards`);
-    if (progress.total > 0) {
-      const percentage = Math.round((progress.completed / progress.total) * 100);
-      console.log(`📊 Completion: ${percentage}%`);
-    }
-  }, [progress]);
-
-  const calculateCardCount = (skeletonData) => {
-    let total = 0;
-    
-    Object.values(skeletonData).forEach(colorData => {
-      if (Array.isArray(colorData)) {
-        // Handle colorless format (direct array)
-        total += colorData.length;
-      } else if (typeof colorData === 'object') {
-        // Handle regular color format (nested objects)
-        Object.values(colorData).forEach(rarityData => {
-          if (Array.isArray(rarityData)) {
-            // Direct array of cards
-            total += rarityData.length;
-          } else if (typeof rarityData === 'object') {
-            // Nested structure (creatures, spells, etc.)
-            Object.values(rarityData).forEach(cardTypeData => {
-              if (Array.isArray(cardTypeData)) {
-                total += cardTypeData.length;
-              }
-            });
-          }
-        });
-      }
-    });
-    
-    return total;
-  };
-
-  const loadSkeleton = async () => {
-    try {
-      const endpoint = setType === 'commons' ? '/api/skeleton/commons' : '/api/skeleton';
-      const response = await axios.get(endpoint);
-      setSkeleton(response.data);
-      
-      // Calculate actual card count for this skeleton
-      const actualCount = calculateCardCount(response.data);
-      setCardCounts(prev => ({
-        ...prev,
-        [setType]: actualCount
-      }));
-      
-      initializeCurrentSet(response.data);
-    } catch (error) {
-      console.error('Failed to load skeleton:', error);
-    }
-  };
-
-  // Load both skeleton counts on component mount
-  useEffect(() => {
-    const loadInitialCounts = async () => {
-      try {
-        // Load full set count
-        const fullResponse = await axios.get('/api/skeleton');
-        const fullCount = calculateCardCount(fullResponse.data);
-        
-        // Load commons count  
-        const commonsResponse = await axios.get('/api/skeleton/commons');
-        const commonsCount = calculateCardCount(commonsResponse.data);
-        
-        setCardCounts({ full: fullCount, commons: commonsCount });
-      } catch (error) {
-        console.error('Failed to load initial card counts:', error);
-      }
-    };
-    
-    loadInitialCounts();
-  }, []);
-
-  // Reload skeleton when set type changes
-  useEffect(() => {
-    if (setType) {
-      loadSkeleton();
-    }
-  }, [setType]);
-
-  const initializeCurrentSet = (skeletonData) => {
+  // Initialize current set with empty slots
+  const initializeCurrentSet = useCallback((skeletonData) => {
     const initialSet = {};
     
     // Initialize all slots as empty
@@ -286,7 +152,147 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
     
     setCurrentSet(initialSet);
     updateProgress(initialSet);
+  }, []);
+
+  // Load skeleton data from API
+  const loadSkeleton = useCallback(async () => {
+    try {
+      const endpoint = setType === 'commons' ? '/api/skeleton/commons' : '/api/skeleton';
+      const response = await axios.get(endpoint);
+      setSkeleton(response.data);
+      
+      // Calculate actual card count for this skeleton
+      const actualCount = calculateCardCount(response.data);
+      setCardCounts(prev => ({
+        ...prev,
+        [setType]: actualCount
+      }));
+      
+      initializeCurrentSet(response.data);
+    } catch (error) {
+      console.error('Failed to load skeleton:', error);
+    }
+  }, [setType, initializeCurrentSet]);
+
+  useEffect(() => {
+    loadSkeleton();
+    // Load dark mode preference from localStorage, defaulting to true (dark mode)
+    const savedDarkMode = localStorage.getItem('darkMode');
+    setDarkMode(savedDarkMode !== null ? savedDarkMode === 'true' : true);
+  }, [loadSkeleton]);
+
+  // Update theme when initialTheme changes
+  useEffect(() => {
+    if (initialTheme && initialTheme !== theme) {
+      setTheme(initialTheme);
+      setShowConceptBuilder(false);
+      console.log('🎨 SetBuilder: Updated theme from concept:', initialTheme);
+    }
+  }, [initialTheme, theme]);
+
+  // Update concept when initialConcept changes
+  useEffect(() => {
+    if (initialConcept && initialConcept !== concept) {
+      setConcept(initialConcept);
+      setShowConceptBuilder(false);
+      console.log('🎯 SetBuilder: Updated concept:', initialConcept.name);
+    }
+  }, [initialConcept, concept]);
+
+  // Update dark mode when parent changes
+  useEffect(() => {
+    if (parentDarkMode !== undefined) {
+      setDarkMode(parentDarkMode);
+    }
+  }, [parentDarkMode]);
+
+  useEffect(() => {
+    // Apply dark mode class to body
+    document.body.classList.toggle('dark-mode', darkMode);
+    localStorage.setItem('darkMode', darkMode);
+  }, [darkMode]);
+
+  // Log loading state changes
+  useEffect(() => {
+    if (loading) {
+      console.log(`🔄 GENERATION STATE: Loading started`);
+      console.log(`🎯 Current progress: ${progress.completed}/${progress.total} cards`);
+      console.log(`📝 Theme: "${theme}"`);
+      console.log(`🎨 Set type: ${setType}`);
+    } else {
+      console.log(`⏸️  GENERATION STATE: Loading stopped`);
+      console.log(`🏁 Final progress: ${progress.completed}/${progress.total} cards`);
+    }
+  }, [loading, progress.completed, progress.total, setType, theme]);
+
+  // Log progress changes
+  useEffect(() => {
+    console.log(`📈 PROGRESS CHANGE: ${progress.completed}/${progress.total} cards`);
+    if (progress.total > 0) {
+      const percentage = Math.round((progress.completed / progress.total) * 100);
+      console.log(`📊 Completion: ${percentage}%`);
+    }
+  }, [progress.completed, progress.total]);
+
+  const calculateCardCount = (skeletonData) => {
+    let total = 0;
+    
+    Object.values(skeletonData).forEach(colorData => {
+      if (Array.isArray(colorData)) {
+        // Handle colorless format (direct array)
+        total += colorData.length;
+      } else if (typeof colorData === 'object') {
+        // Handle regular color format (nested objects)
+        Object.values(colorData).forEach(rarityData => {
+          if (Array.isArray(rarityData)) {
+            // Direct array of cards
+            total += rarityData.length;
+          } else if (typeof rarityData === 'object') {
+            // Nested structure (creatures, spells, etc.)
+            Object.values(rarityData).forEach(cardTypeData => {
+              if (Array.isArray(cardTypeData)) {
+                total += cardTypeData.length;
+              }
+            });
+          }
+        });
+      }
+    });
+    
+    return total;
   };
+
+
+
+  // Load both skeleton counts on component mount
+  useEffect(() => {
+    const loadInitialCounts = async () => {
+      try {
+        // Load full set count
+        const fullResponse = await axios.get('/api/skeleton');
+        const fullCount = calculateCardCount(fullResponse.data);
+        
+        // Load commons count  
+        const commonsResponse = await axios.get('/api/skeleton/commons');
+        const commonsCount = calculateCardCount(commonsResponse.data);
+        
+        setCardCounts({ full: fullCount, commons: commonsCount });
+      } catch (error) {
+        console.error('Failed to load initial card counts:', error);
+      }
+    };
+    
+    loadInitialCounts();
+  }, []);
+
+  // Reload skeleton when set type changes
+  useEffect(() => {
+    if (setType) {
+      loadSkeleton();
+    }
+  }, [setType, loadSkeleton]);
+
+
 
   const updateProgress = (setData) => {
     let completed = 0;
@@ -370,14 +376,14 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
     }));
   };
 
-  const updateArchetype = (index, field, value) => {
-    setConcept(prev => ({
-      ...prev,
-      archetypes: prev.archetypes.map((arch, i) => 
-        i === index ? { ...arch, [field]: value } : arch
-      )
-    }));
-  };
+  // const updateArchetype = (index, field, value) => {
+  //   setConcept(prev => ({
+  //     ...prev,
+  //     archetypes: prev.archetypes.map((arch, i) => 
+  //       i === index ? { ...arch, [field]: value } : arch
+  //     )
+  //   }));
+  // };
 
   const proceedToCardGeneration = () => {
     if (concept) {
