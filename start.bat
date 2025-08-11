@@ -2,14 +2,6 @@
 echo Starting MTG Set Generator...
 echo.
 
-REM Check if .env exists
-if not exist "backend\.env" (
-    echo ERROR: backend\.env file not found!
-    echo Please copy backend\.env.example to backend\.env and add your OpenAI API key
-    pause
-    exit /b 1
-)
-
 REM Start backend in new window
 echo Starting Flask backend...
 start "MTG Backend" cmd /k "cd backend && python app.py"

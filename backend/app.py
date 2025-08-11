@@ -5,13 +5,9 @@ import openai
 from openai import RateLimitError
 import os
 import json
-from dotenv import load_dotenv
 from card_generator import CardGenerator
 from set_skeleton import SetSkeleton
 from export_utils import SetExporter
-
-# Load environment variables from .env file
-load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
@@ -25,15 +21,12 @@ socketio = SocketIO(
     async_mode="threading",
 )
 
-# Check if API key is loaded
-api_key = os.getenv("OPENAI_API_KEY")
-if not api_key:
-    print("ERROR: OPENAI_API_KEY not found in environment variables")
-    print("Make sure your .env file exists and contains OPENAI_API_KEY=your_key_here")
-    exit(1)
+# No fallback API key - users must provide their own
+fallback_api_key = None
+print("INFO: Application configured to require user-provided OpenAI API keys")
 
-# Initialize OpenAI client
-openai.api_key = api_key
+# Initialize OpenAI client (will be set per request)
+# openai.api_key will be set dynamically per request
 
 # Define model fallback chain for set concept generation
 MODEL_FALLBACK_CHAIN = [
@@ -57,23 +50,28 @@ def _is_insufficient_quota_error(error):
     )
 
 
-def _make_api_request_with_fallback(messages, temperature=0.8):
+def _make_api_request_with_fallback(messages, temperature=0.8, api_key=None):
     """Make an API request with automatic model fallback on quota errors"""
     global current_model_index
+
+    # API key is required - no fallback
+    if not api_key:
+        raise ValueError("OpenAI API key is required")
 
     while current_model_index < len(MODEL_FALLBACK_CHAIN):
         current_model = MODEL_FALLBACK_CHAIN[current_model_index]
         try:
             # Log the API key being used (first 10 chars for security)
-            api_key_used = os.getenv("OPENAI_API_KEY", "NOT_SET")
             print(
-                f"Using OpenAI API key: {api_key_used[:10]}..."
-                if api_key_used != "NOT_SET"
+                f"Using OpenAI API key: {api_key[:10]}..."
+                if api_key
                 else "API key not set!"
             )
             print(f"Making set concept API request with model: {current_model}")
 
-            response = openai.chat.completions.create(
+            # Create a new client instance with the provided API key
+            client = openai.OpenAI(api_key=api_key)
+            response = client.chat.completions.create(
                 model=current_model,
                 messages=messages,
                 temperature=temperature,
@@ -147,10 +145,17 @@ def generate_card():
         rarity = data.get("rarity", "")
         slot_id = data.get("slot_id", "")
         slot_data = data.get("slot_data", {})
+        api_key = data.get("apiKey", "")
 
         if not all([theme, color, rarity, slot_id]):
             return (
                 jsonify({"error": "Theme, color, rarity, and slot_id are required"}),
+                400,
+            )
+
+        if not api_key:
+            return (
+                jsonify({"error": "OpenAI API key is required"}),
                 400,
             )
 
@@ -169,7 +174,7 @@ def generate_card():
         # Generate card using the enhanced card generator
         print("API: Starting card generation process...")
         card = get_card_generator().generate_skeleton_card(
-            theme, color, rarity, slot_id, slot_data
+            theme, color, rarity, slot_id, slot_data, api_key
         )
 
         print(f"API: Successfully generated card: {card.get('name', 'Unknown')}")
@@ -201,14 +206,20 @@ def generate_full_set():
         data = request.json
         theme = data.get("theme", "")
         use_parallel = data.get("use_parallel", False)
+        api_key = data.get("apiKey", "")
 
         if not theme:
             return jsonify({"error": "Theme is required"}), 400
 
+        if not api_key:
+            return jsonify({"error": "OpenAI API key is required"}), 400
+
         print(f"Generating full set for theme: {theme} (parallel: {use_parallel})")
 
         # Generate complete set using batch processing
-        complete_set = get_card_generator().generate_complete_set(theme, set_skeleton)
+        complete_set = get_card_generator().generate_complete_set(
+            theme, set_skeleton, api_key
+        )
 
         print(
             f"Successfully generated {len(complete_set)} color sections using batch processing"
@@ -230,9 +241,13 @@ def generate_commons_only():
         data = request.json
         theme = data.get("theme", "")
         use_parallel = data.get("use_parallel", False)
+        api_key = data.get("apiKey", "")
 
         if not theme:
             return jsonify({"error": "Theme is required"}), 400
+
+        if not api_key:
+            return jsonify({"error": "OpenAI API key is required"}), 400
 
         print(f"Generating commons only for theme: {theme} (parallel: {use_parallel})")
 
@@ -242,7 +257,7 @@ def generate_commons_only():
 
         # Generate commons using batch processing
         commons_set = get_card_generator().generate_complete_set(
-            theme, commons_skeleton_data
+            theme, commons_skeleton_data, api_key
         )
 
         print(
@@ -302,12 +317,16 @@ def generate_set():
     try:
         data = request.json
         theme = data.get("theme", "")
+        api_key = data.get("apiKey", "")
 
         if not theme:
             return jsonify({"error": "Theme is required"}), 400
 
+        if not api_key:
+            return jsonify({"error": "OpenAI API key is required"}), 400
+
         # Generate commons based on design skeleton
-        commons = get_card_generator().generate_commons(theme)
+        commons = get_card_generator().generate_commons(theme, api_key)
 
         return jsonify({"success": True, "theme": theme, "commons": commons})
 
@@ -321,15 +340,19 @@ def generate_full_set_ultra_fast():
     try:
         data = request.json
         theme = data.get("theme", "")
+        api_key = data.get("apiKey", "")
 
         if not theme:
             return jsonify({"error": "Theme is required"}), 400
+
+        if not api_key:
+            return jsonify({"error": "OpenAI API key is required"}), 400
 
         print(f"Generating full set ULTRA FAST for theme: {theme}")
 
         # Use the large batch processing for maximum speed
         complete_set = get_card_generator().generate_complete_set_large_batches(
-            theme, set_skeleton
+            theme, set_skeleton, api_key
         )
 
         print(f"Successfully generated {len(complete_set)} color sections ULTRA FAST")
@@ -349,9 +372,13 @@ def generate_commons_only_ultra_fast():
     try:
         data = request.json
         theme = data.get("theme", "")
+        api_key = data.get("apiKey", "")
 
         if not theme:
             return jsonify({"error": "Theme is required"}), 400
+
+        if not api_key:
+            return jsonify({"error": "OpenAI API key is required"}), 400
 
         print(f"Generating commons only ULTRA FAST for theme: {theme}")
 
@@ -360,7 +387,7 @@ def generate_commons_only_ultra_fast():
         print(f"Commons skeleton has {len(commons_skeleton_data)} colors")
 
         commons_set = get_card_generator().generate_complete_set_large_batches(
-            theme, commons_skeleton_data
+            theme, commons_skeleton_data, api_key
         )
 
         print(
@@ -382,15 +409,19 @@ def generate_full_set_large_batches():
     try:
         data = request.json
         theme = data.get("theme", "")
+        api_key = data.get("apiKey", "")
 
         if not theme:
             return jsonify({"error": "Theme is required"}), 400
+
+        if not api_key:
+            return jsonify({"error": "OpenAI API key is required"}), 400
 
         print(f"Generating full set with LARGE BATCHES for theme: {theme}")
 
         # Generate complete set using large batch processing
         complete_set = get_card_generator().generate_complete_set_large_batches(
-            theme, set_skeleton
+            theme, set_skeleton, api_key
         )
 
         print(
@@ -412,9 +443,13 @@ def generate_commons_only_large_batches():
     try:
         data = request.json
         theme = data.get("theme", "")
+        api_key = data.get("apiKey", "")
 
         if not theme:
             return jsonify({"error": "Theme is required"}), 400
+
+        if not api_key:
+            return jsonify({"error": "OpenAI API key is required"}), 400
 
         print(f"Generating commons only with LARGE BATCHES for theme: {theme}")
 
@@ -423,7 +458,7 @@ def generate_commons_only_large_batches():
         print(f"Commons skeleton has {len(commons_skeleton_data)} colors")
 
         commons_set = get_card_generator().generate_complete_set_large_batches(
-            theme, commons_skeleton_data
+            theme, commons_skeleton_data, api_key
         )
 
         print(
@@ -445,15 +480,19 @@ def generate_full_set_batched_50():
     try:
         data = request.json
         theme = data.get("theme", "")
+        api_key = data.get("apiKey", "")
 
         if not theme:
             return jsonify({"error": "Theme is required"}), 400
+
+        if not api_key:
+            return jsonify({"error": "OpenAI API key is required"}), 400
 
         print(f"Generating full set in large batches for theme: {theme}")
 
         # Generate complete set using large batch processing
         complete_set = get_card_generator().generate_complete_set_large_batches(
-            theme, set_skeleton
+            theme, set_skeleton, api_key
         )
 
         print(
@@ -475,9 +514,13 @@ def generate_commons_only_batched_50():
     try:
         data = request.json
         theme = data.get("theme", "")
+        api_key = data.get("apiKey", "")
 
         if not theme:
             return jsonify({"error": "Theme is required"}), 400
+
+        if not api_key:
+            return jsonify({"error": "OpenAI API key is required"}), 400
 
         print(f"Generating commons only in large batches for theme: {theme}")
 
@@ -486,7 +529,7 @@ def generate_commons_only_batched_50():
         print(f"Commons skeleton has {len(commons_skeleton_data)} colors")
 
         commons_set = get_card_generator().generate_complete_set_large_batches(
-            theme, commons_skeleton_data
+            theme, commons_skeleton_data, api_key
         )
 
         print(
@@ -509,11 +552,15 @@ def generate_set_stream():
         data = request.json
         theme = data.get("theme", "")
         set_type = data.get("set_type", "full")  # 'full' or 'commons'
+        api_key = data.get("apiKey", "")
         # Note: parallel processing not yet implemented for streaming
         # use_parallel = data.get("use_parallel", True)
 
         if not theme:
             return jsonify({"error": "Theme is required"}), 400
+
+        if not api_key:
+            return jsonify({"error": "OpenAI API key is required"}), 400
 
         def generate():
             try:
@@ -545,7 +592,12 @@ def generate_set_stream():
                         for slot in slots_to_process:
                             try:
                                 card = get_card_generator().generate_skeleton_card(
-                                    theme, color_name, rarity_name, slot["id"], slot
+                                    theme,
+                                    color_name,
+                                    rarity_name,
+                                    slot["id"],
+                                    slot,
+                                    api_key,
                                 )
                                 update = {
                                     "type": "card",
@@ -596,9 +648,13 @@ def generate_set_concept():
     try:
         data = request.json
         pitch = data.get("pitch", "")
+        api_key = data.get("apiKey", "")
 
         if not pitch.strip():
             return jsonify({"error": "Pitch is required"}), 400
+
+        if not api_key:
+            return jsonify({"error": "OpenAI API key is required"}), 400
 
         print(f"Generating set concept from pitch: {pitch}")
 
@@ -647,6 +703,7 @@ Each archetype should have a distinct identity that fits the set's theme and cre
                     },
                 ],
                 temperature=0.8,
+                api_key=api_key,
             )
 
             concept_json = response.choices[0].message.content

@@ -4,7 +4,7 @@ import './SetBuilder.css';
 import './SetConceptBuilder.css';
 import { useSocket } from '../hooks/useSocket';
 
-const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerated, darkMode: parentDarkMode }) => {
+const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerated, darkMode: parentDarkMode, apiKey = '' }) => {
   const [skeleton, setSkeleton] = useState(null);
   const [currentSet, setCurrentSet] = useState({});
   const [theme, setTheme] = useState(initialTheme);
@@ -12,7 +12,7 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
   // const [selectedRarity, setSelectedRarity] = useState('common');
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState({ completed: 0, total: 0 });
-  const [setType, setSetType] = useState('full'); // 'full' or 'commons'
+  const [setType, setSetType] = useState('commons'); // 'full' or 'commons' - default to commons
   const [cardCounts, setCardCounts] = useState({ full: 271, commons: 102 }); // Default counts, will be updated when skeleton loads
   const [darkMode, setDarkMode] = useState(parentDarkMode !== undefined ? parentDarkMode : true);
   const [useParallel] = useState(true); // Always use parallel processing
@@ -325,11 +325,17 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
       return;
     }
 
+    if (!apiKey.trim()) {
+      alert('Please enter your OpenAI API key');
+      return;
+    }
+
     setConceptLoading(true);
     try {
       console.log('🎯 Generating set concept from pitch:', pitch);
       const response = await axios.post('/api/generate-set-concept', {
-        pitch: pitch.trim()
+        pitch: pitch.trim(),
+        apiKey: apiKey.trim()
       });
 
       console.log('✅ Set concept generated:', response.data.concept.name);
@@ -414,6 +420,11 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
       return;
     }
 
+    if (!apiKey.trim()) {
+      alert('Please enter your OpenAI API key');
+      return;
+    }
+
     console.log(`🎯 Starting card generation for slot ${slotId} (${colorName} ${rarity})`);
     console.log(`📝 Theme: "${theme.trim()}"`);
     console.log(`🔧 Slot data:`, slotData);
@@ -428,7 +439,8 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
         color: colorName,
         rarity: rarity,
         slot_id: slotId,
-        slot_data: slotData
+        slot_data: slotData,
+        apiKey: apiKey.trim()
       });
       
       const generationTime = Date.now() - startTime;
@@ -491,7 +503,8 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
         body: JSON.stringify({
           theme: theme.trim(),
           set_type: setType,
-          use_parallel: useParallel
+          use_parallel: useParallel,
+          apiKey: apiKey.trim()
         })
       });
 
@@ -566,6 +579,11 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
       return;
     }
 
+    if (!apiKey.trim()) {
+      alert('Please enter your OpenAI API key');
+      return;
+    }
+
     console.log(`🔥 Starting FULL SET generation!`);
     console.log(`📝 Theme: "${theme.trim()}"`);
     console.log(`🎯 Set type: ${setType}`);
@@ -611,7 +629,8 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
       
       const response = await axios.post(endpoint, {
         theme: theme.trim(),
-        use_parallel: useParallel
+        use_parallel: useParallel,
+        apiKey: apiKey.trim()
       });
       
       const generationTime = Date.now() - startTime;
@@ -725,7 +744,6 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
       <div key={slot.id} className="slot-card">
         <div className="slot-header">
           <span className="slot-id">{slot.id}</span>
-          <span className="slot-description">{slot.description}</span>
         </div>
         
         {card ? (
@@ -793,7 +811,7 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
                 {Array.isArray(rarityData) ? (
                   rarityData.map(slot => renderSlot(slot, colorName, rarity))
                 ) : (
-                  Object.keys(rarityData).map(cardType => {
+                  Object.keys(rarityData).filter(cardType => cardType !== 'notes').map(cardType => {
                     if (Array.isArray(rarityData[cardType])) {
                       return (
                         <div key={cardType} className="card-type-section">
@@ -1024,35 +1042,24 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
                 </button>
               )}
             </div>
-            <button 
-              className="dark-mode-toggle"
-              onClick={() => setDarkMode(!darkMode)}
-              title="Toggle dark mode"
-            >
-              {darkMode ? '☀️' : '🌙'}
-            </button>
           </div>
         </div>
         
-        <div className="set-type-selector">
-          <label>
-            <input
-              type="radio"
-              value="full"
-              checked={setType === 'full'}
-              onChange={(e) => setSetType(e.target.value)}
-            />
-            Full Set ({cardCounts.full} cards)
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="commons"
-              checked={setType === 'commons'}
-              onChange={(e) => setSetType(e.target.value)}
-            />
-            Commons Only ({cardCounts.commons} cards)
-          </label>
+        <div className="set-type-toggle-container">
+          <div className="set-type-toggle">
+            <button 
+              className={`toggle-button ${setType === 'commons' ? 'active' : ''}`}
+              onClick={() => setSetType('commons')}
+            >
+              Commons Only ({cardCounts.commons} cards)
+            </button>
+            <button 
+              className={`toggle-button ${setType === 'full' ? 'active' : ''}`}
+              onClick={() => setSetType('full')}
+            >
+              Full Set ({cardCounts.full} cards)
+            </button>
+          </div>
         </div>
         
         {(concept || setConcept) && !showConceptBuilder && (
@@ -1129,37 +1136,37 @@ const SetBuilder = ({ initialTheme = '', initialConcept = null, onConceptGenerat
         )}
         
         <div className="builder-actions">
-          {!showConceptBuilder && (
+          <div className="main-actions">
+            {!showConceptBuilder && (
+              <button 
+                className="show-concept-button"
+                onClick={() => setShowConceptBuilder(true)}
+              >
+                Create New Concept
+              </button>
+            )}
+            
             <button 
-              className="show-concept-button"
-              onClick={() => setShowConceptBuilder(true)}
+              className="generate-all-button"
+              onClick={(useStreaming && !useUltraFast) ? generateAllCardsStreaming : generateAllCards}
+              disabled={loading || !theme.trim()}
             >
-              Create New Concept
+              {loading 
+                ? (() => {
+                    const buttonText = setType === 'commons' ? 'Generating Commons...' : 'Generating Cards...';
+                    console.log(`🔴 UI: Generate button showing "${buttonText}" (disabled)`);
+                    return buttonText;
+                  })()
+                : (() => {
+                    const buttonText = setType === 'commons' ? 'Generate All Commons' : 'Generate All Cards';
+                    console.log(`🟢 UI: Generate button showing "${buttonText}" (enabled)`);
+                    return buttonText;
+                  })()
+              }
             </button>
-          )}
-          
-          <button 
-            className="generate-all-button"
-            onClick={(useStreaming && !useUltraFast) ? generateAllCardsStreaming : generateAllCards}
-            disabled={loading || !theme.trim()}
-          >
-            {loading 
-              ? (() => {
-                  const buttonText = setType === 'commons' ? 'Generating Commons...' : 'Generating Cards...';
-                  console.log(`🔴 UI: Generate button showing "${buttonText}" (disabled)`);
-                  return buttonText;
-                })()
-              : (() => {
-                  const buttonText = setType === 'commons' ? 'Generate All Commons' : 'Generate All Cards';
-                  console.log(`🟢 UI: Generate button showing "${buttonText}" (enabled)`);
-                  return buttonText;
-                })()
-            }
-          </button>
-          
+          </div>
 
-          
-          <div className="export-dropdown">
+          <div className="export-actions">
             <button 
               className="export-button"
               onClick={() => exportSet('json')}

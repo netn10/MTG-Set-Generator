@@ -4,6 +4,7 @@ import './App.css';
 import CardDisplay from './components/CardDisplay';
 import ThemeInput from './components/ThemeInput';
 import SetBuilder from './components/SetBuilder';
+import Settings from './components/Settings';
 
 function App() {
   const [currentView, setCurrentView] = useState('builder'); // Start with integrated builder
@@ -13,6 +14,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [darkMode, setDarkMode] = useState(true);
+  const [apiKey, setApiKey] = useState('');
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
@@ -24,6 +26,11 @@ function App() {
       return;
     }
 
+    if (!apiKey.trim()) {
+      setError('Please enter your OpenAI API key');
+      return;
+    }
+
     console.log(`🎯 Legacy Generator: Starting set generation for theme "${theme.trim()}"`);
     setLoading(true);
     setError('');
@@ -32,7 +39,8 @@ function App() {
     try {
       console.log(`🚀 Legacy Generator: Sending API request...`);
       const response = await axios.post('/api/generate-set', {
-        theme: theme.trim()
+        theme: theme.trim(),
+        apiKey: apiKey.trim()
       });
       
       const generationTime = Date.now() - startTime;
@@ -67,19 +75,8 @@ function App() {
   return (
     <div className={`App ${darkMode ? 'dark-mode' : 'light-mode'}`}>
       <header className="App-header">
-        <div className="header-top">
-          <div className="header-content">
-            <h1>Magic: The Gathering Set Generator</h1>
-            <p>Professional set design using Mark Rosewater's skeleton framework</p>
-          </div>
-          <button 
-            className="dark-mode-toggle"
-            onClick={toggleDarkMode}
-            aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {darkMode ? '☀️' : '🌙'}
-          </button>
-        </div>
+        <h1 style={{textAlign: 'center', marginBottom: '20px'}}>Magic: The Gathering Set Generator</h1>
+        <p style={{marginBottom: '5px'}}>Professional set design using Mark Rosewater's skeleton framework</p>
         
         <nav className="app-nav">
           <button 
@@ -94,16 +91,49 @@ function App() {
           >
             Quick Generator
           </button>
+          <button 
+            className={currentView === 'settings' ? 'active' : ''}
+            onClick={() => setCurrentView('settings')}
+          >
+            Settings
+          </button>
         </nav>
       </header>
       
       <main className="App-main">
+        {/* API Key Input - Always visible */}
+        <div className="api-key-section">
+          <div className="api-key-input-container">
+            <label htmlFor="api-key-input">OpenAI API Key:</label>
+            <input
+              id="api-key-input"
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Enter your OpenAI API key (sk-...)"
+              className="api-key-input"
+            />
+            <small className="api-key-help">
+              Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">OpenAI Platform</a>
+            </small>
+          </div>
+        </div>
+
         {currentView === 'builder' ? (
           <SetBuilder 
             initialTheme={theme}
             setConcept={setConcept}
             onConceptGenerated={handleConceptGenerated}
             darkMode={darkMode}
+            apiKey={apiKey}
+          />
+        ) : currentView === 'settings' ? (
+          <Settings 
+            darkMode={darkMode}
+            theme={theme}
+            setTheme={setTheme}
+            onGenerate={generateSet}
+            loading={loading}
           />
         ) : (
           <>

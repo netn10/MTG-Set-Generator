@@ -3,10 +3,6 @@ import json
 import os
 import logging
 from datetime import datetime
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
 
 # Configure logging for card generation
 logging.basicConfig(level=logging.INFO)
@@ -14,19 +10,17 @@ logger = logging.getLogger(__name__)
 
 
 class CardGenerator:
-    def __init__(self, socketio=None):
+    def __init__(self, socketio=None, default_api_key=None):
         self.socketio = socketio
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError("OPENAI_API_KEY environment variable is required")
+        self.default_api_key = default_api_key
 
-        # Disable automatic retries to fail fast on quota errors and avoid repeated 429s
-        try:
-            print("Using OpenAI API key: ", api_key[:10] + "...")
-            self.client = openai.OpenAI(api_key=api_key, max_retries=0)
-        except TypeError:
-            # Fallback if installed SDK version doesn't support max_retries kwarg
-            self.client = openai.OpenAI(api_key=api_key)
+        if not self.default_api_key:
+            print("INFO: No default API key provided - will use per-request keys")
+        else:
+            print("Using default OpenAI API key: ", self.default_api_key[:10] + "...")
+
+        # Client will be created per request with the appropriate API key
+        self.client = None
 
         # Define model fallback chain (in order of preference)
         self.model_fallback_chain = [
@@ -66,21 +60,34 @@ class CardGenerator:
             logger.warning("All models exhausted")
             return False
 
-    def _make_api_request(self, messages, temperature=1.0):
+    def _make_api_request(self, messages, temperature=1.0, api_key=None):
         """Make an API request with automatic model fallback on quota errors"""
+        # Use provided API key or fall back to default
+        if not api_key:
+            api_key = self.default_api_key
+
+        if not api_key:
+            raise ValueError("OpenAI API key is required")
+
+        # Create client with the appropriate API key
+        try:
+            client = openai.OpenAI(api_key=api_key, max_retries=0)
+        except TypeError:
+            # Fallback if installed SDK version doesn't support max_retries kwarg
+            client = openai.OpenAI(api_key=api_key)
+
         while self.current_model_index < len(self.model_fallback_chain):
             current_model = self._get_current_model()
             try:
                 # Log the API key being used (first 10 chars for security)
-                api_key_used = os.getenv("OPENAI_API_KEY", "NOT_SET")
                 logger.info(
-                    f"Using OpenAI API key: {api_key_used[:10]}..."
-                    if api_key_used != "NOT_SET"
+                    f"Using OpenAI API key: {api_key[:10]}..."
+                    if api_key
                     else "API key not set!"
                 )
                 logger.info(f"Making API request with model: {current_model}")
 
-                response = self.client.chat.completions.create(
+                response = client.chat.completions.create(
                     model=current_model,
                     messages=messages,
                     temperature=temperature,
@@ -142,23 +149,25 @@ class CardGenerator:
         else:
             logger.debug("WebSocket: No socketio instance available for card emission")
 
-    def generate_commons(self, theme):
+    def generate_commons(self, theme, api_key=None):
         """Generate a full set of commons based on the theme and ChatGPT-generated design skeleton"""
         # First, generate a design skeleton based on the theme
-        design_skeleton = self._generate_design_skeleton(theme)
+        design_skeleton = self._generate_design_skeleton(theme, api_key)
 
         commons = []
         for color in ["white", "blue", "black", "red", "green"]:
-            color_commons = self._generate_color_commons(color, theme, design_skeleton)
+            color_commons = self._generate_color_commons(
+                color, theme, design_skeleton, api_key
+            )
             commons.extend(color_commons)
 
         # Add colorless commons - generate them individually since they don't follow the same pattern
-        colorless_commons = self._generate_colorless_commons(theme)
+        colorless_commons = self._generate_colorless_commons(theme, api_key)
         commons.extend(colorless_commons)
 
         return commons
 
-    def _generate_colorless_commons(self, theme):
+    def _generate_colorless_commons(self, theme, api_key=None):
         """Generate colorless common cards based on the theme"""
         colorless_commons = []
 
@@ -194,13 +203,13 @@ class CardGenerator:
 
         for i, template in enumerate(colorless_templates, 1):
             card = self._generate_colorless_card(
-                template, theme, f"colorless_common_{i}"
+                template, theme, f"colorless_common_{i}", api_key
             )
             colorless_commons.append(card)
 
         return colorless_commons
 
-    def _generate_colorless_card(self, template, theme, card_id):
+    def _generate_colorless_card(self, template, theme, card_id, api_key=None):
         """Generate a single colorless card"""
         prompt = f"""
         Create a Magic: The Gathering colorless common card with the following specifications:
@@ -234,16 +243,16 @@ class CardGenerator:
         """
 
         try:
-            response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
+            response = self._make_api_request(
+                [
                     {
                         "role": "system",
                         "content": "You are an expert Magic: The Gathering card designer specializing in creating balanced colorless cards. Focus on making artifacts and Equipment that feel unique and thematic while maintaining balance.",
                     },
                     {"role": "user", "content": prompt},
                 ],
-                temperature=1,
+                temperature=1.0,
+                api_key=api_key,
             )
 
             card_json = response.choices[0].message.content
@@ -258,7 +267,7 @@ class CardGenerator:
             # Re-raise the exception instead of returning a fallback card
             raise e
 
-    def _generate_design_skeleton(self, theme):
+    def _generate_design_skeleton(self, theme, api_key=None):
         """Generate a design skeleton using ChatGPT based on the theme"""
         prompt = f"""
         Create a Magic: The Gathering design skeleton for commons that fits the "{theme}" theme.
@@ -290,16 +299,16 @@ class CardGenerator:
         """
 
         try:
-            response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
+            response = self._make_api_request(
+                [
                     {
                         "role": "system",
                         "content": "You are an expert Magic: The Gathering set designer. Create balanced, thematic design skeletons that follow established design principles.",
                     },
                     {"role": "user", "content": prompt},
                 ],
-                temperature=1,
+                temperature=1.0,
+                api_key=api_key,
             )
 
             skeleton_json = response.choices[0].message.content
@@ -315,24 +324,26 @@ class CardGenerator:
             # Re-raise the exception instead of returning a fallback skeleton
             raise e
 
-    def _generate_color_commons(self, color, theme, design_skeleton):
+    def _generate_color_commons(self, color, theme, design_skeleton, api_key=None):
         """Generate commons for a specific color"""
         skeleton = design_skeleton[color]
         color_commons = []
 
         # Generate creatures
         for creature_template in skeleton["creatures"]:
-            card = self._generate_card(creature_template, color, theme, "creature")
+            card = self._generate_card(
+                creature_template, color, theme, "creature", api_key
+            )
             color_commons.append(card)
 
         # Generate spells
         for spell_template in skeleton["spells"]:
-            card = self._generate_card(spell_template, color, theme, "spell")
+            card = self._generate_card(spell_template, color, theme, "spell", api_key)
             color_commons.append(card)
 
         return color_commons
 
-    def _generate_card(self, template, color, theme, card_type):
+    def _generate_card(self, template, color, theme, card_type, api_key=None):
         """Generate a single card using ChatGPT"""
         prompt = f"""
         Create a Magic: The Gathering common card with the following specifications:
@@ -373,16 +384,16 @@ class CardGenerator:
         """
 
         try:
-            response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
+            response = self._make_api_request(
+                [
                     {
                         "role": "system",
                         "content": "You are an expert Magic: The Gathering card designer specializing in creating engaging, flavorful cards that players love to play with. Focus on making every card feel unique and interesting while maintaining balance.",
                     },
                     {"role": "user", "content": prompt},
                 ],
-                temperature=1,
+                temperature=1.0,
+                api_key=api_key,
             )
 
             card_json = response.choices[0].message.content
@@ -397,7 +408,9 @@ class CardGenerator:
             # Re-raise the exception instead of returning a fallback card
             raise e
 
-    def generate_skeleton_card(self, theme, color, rarity, slot_id, slot_data):
+    def generate_skeleton_card(
+        self, theme, color, rarity, slot_id, slot_data, api_key=None
+    ):
         """Generate a card based on skeleton slot specifications"""
         start_time = datetime.now()
         logger.info(
@@ -474,6 +487,7 @@ class CardGenerator:
                     {"role": "user", "content": prompt},
                 ],
                 temperature=1.0,
+                api_key=api_key,
             )
 
             card_json = response.choices[0].message.content
@@ -510,7 +524,7 @@ class CardGenerator:
             # Re-raise the exception instead of returning a fallback card
             raise e
 
-    def generate_batch_cards(self, theme, card_requests):
+    def generate_batch_cards(self, theme, card_requests, api_key=None):
         """Generate multiple cards in a single API call for maximum efficiency"""
         if not card_requests:
             return {}
@@ -611,6 +625,7 @@ class CardGenerator:
                     {"role": "user", "content": batch_prompt},
                 ],
                 temperature=0.9,
+                api_key=api_key,
             )  # Slightly lower temperature for more consistent JSON formatting
 
             response_text = response.choices[0].message.content
@@ -688,7 +703,7 @@ class CardGenerator:
             # Re-raise the exception instead of falling back to individual generation
             raise e
 
-    def generate_complete_set(self, theme, skeleton):
+    def generate_complete_set(self, theme, skeleton, api_key=None):
         """Generate all cards for a complete set using true batch processing"""
         start_time = datetime.now()
         logger.info(
@@ -763,7 +778,7 @@ class CardGenerator:
             )
 
             # Use the actual batch generation method that generates multiple cards in one API call
-            batch_cards = self.generate_batch_cards(theme, batch_requests)
+            batch_cards = self.generate_batch_cards(theme, batch_requests, api_key)
 
             # Place generated cards in the correct positions
             for color_name, rarity_name, slot_id, slot_data in batch_requests:
@@ -781,7 +796,7 @@ class CardGenerator:
         )
         return complete_set
 
-    def generate_complete_set_large_batches(self, theme, skeleton):
+    def generate_complete_set_large_batches(self, theme, skeleton, api_key=None):
         """Generate all cards using large batches for maximum efficiency"""
         start_time = datetime.now()
         logger.info(f"Starting LARGE BATCH set generation for theme '{theme}'")
@@ -854,7 +869,7 @@ class CardGenerator:
             )
 
             # Use the batch generation method for maximum efficiency
-            batch_cards = self.generate_batch_cards(theme, batch_requests)
+            batch_cards = self.generate_batch_cards(theme, batch_requests, api_key)
 
             # Place generated cards in the correct positions
             for color_name, rarity_name, slot_id, slot_data in batch_requests:

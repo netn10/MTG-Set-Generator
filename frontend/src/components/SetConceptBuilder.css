@@ -1,4 +1,5 @@
 .set-concept-builder {
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 1.5rem;
@@ -8,11 +9,13 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  box-sizing: border-box;
 }
 
 .concept-header {
   text-align: center;
   margin-bottom: 30px;
+  width: 100%;
 }
 
 .concept-header h2 {
@@ -33,10 +36,14 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .pitch-input {
   margin-bottom: 20px;
+  width: 100%;
 }
 
 .pitch-input label {
@@ -44,10 +51,12 @@
   font-weight: 600;
   margin-bottom: 8px;
   color: #2c3e50;
+  text-align: center;
 }
 
 .pitch-input textarea {
   width: 100%;
+  max-width: 100%;
   padding: 12px;
   border: 2px solid #e1e8ed;
   border-radius: 8px;
@@ -55,6 +64,7 @@
   font-family: inherit;
   resize: vertical;
   transition: border-color 0.2s;
+  box-sizing: border-box;
 }
 
 .pitch-input textarea:focus {
@@ -73,6 +83,8 @@
   cursor: pointer;
   transition: all 0.2s;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .generate-concept-button:hover:not(:disabled) {
@@ -94,6 +106,9 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .concept-actions {
@@ -101,6 +116,8 @@
   gap: 12px;
   margin-bottom: 30px;
   flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
 }
 
 .concept-actions button {
@@ -110,6 +127,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  min-width: 120px;
+  box-sizing: border-box;
 }
 
 .edit-toggle-button {
@@ -190,6 +209,8 @@
   background: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #e9ecef;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .color-pair-tracker {
@@ -235,6 +256,7 @@
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.5rem;
   justify-content: center;
+  width: 100%;
 }
 
 .archetype-card {
@@ -246,6 +268,8 @@
   backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .archetype-card::before {
@@ -305,12 +329,14 @@
 /* Edit Mode */
 .edit-input, .edit-textarea {
   width: 100%;
+  max-width: 100%;
   padding: 8px 12px;
   border: 2px solid #e1e8ed;
   border-radius: 6px;
   font-family: inherit;
   font-size: 14px;
   transition: border-color 0.2s;
+  box-sizing: border-box;
 }
 
 .edit-input:focus, .edit-textarea:focus {
@@ -422,7 +448,7 @@
 }
 
 .flavor-themes li {
-  background: #9b59b6;
+  background: #4a2c5a;
   color: white;
   padding: 6px 14px;
   border-radius: 16px;
@@ -439,9 +465,10 @@
   margin: 0;
 }
 
-/* Dark Mode */
+/* Dark Mode - Dark Purple Theme */
 .set-concept-builder.dark-mode {
   color: #e8e8e8;
+  background: linear-gradient(135deg, #2d1b69 0%, #4a148c 50%, #6a1b9a 100%);
 }
 
 .set-concept-builder.dark-mode .concept-header h2 {
@@ -454,8 +481,10 @@
 
 .set-concept-builder.dark-mode .pitch-input-section,
 .set-concept-builder.dark-mode .concept-display {
-  background: #2c2c2c;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  background: rgba(138, 43, 226, 0.15);
+  border: 1px solid rgba(186, 85, 211, 0.3);
+  box-shadow: 0 8px 32px rgba(74, 20, 140, 0.2);
+  backdrop-filter: blur(15px);
 }
 
 .set-concept-builder.dark-mode .pitch-input label,
@@ -477,8 +506,8 @@
 .set-concept-builder.dark-mode .pitch-input textarea,
 .set-concept-builder.dark-mode .edit-input,
 .set-concept-builder.dark-mode .edit-textarea {
-  background: #3c3c3c;
-  border-color: #555;
+  background: rgba(138, 43, 226, 0.1);
+  border-color: rgba(186, 85, 211, 0.4);
   color: #e8e8e8;
 }
 
@@ -491,8 +520,8 @@
 .set-concept-builder.dark-mode .archetype-card,
 .set-concept-builder.dark-mode .mechanic-edit,
 .set-concept-builder.dark-mode .archetype-edit {
-  background: #3c3c3c;
-  border-color: #555;
+  background: rgba(138, 43, 226, 0.1);
+  border-color: rgba(186, 85, 211, 0.4);
 }
 
 .set-concept-builder.dark-mode .design-notes {
@@ -502,8 +531,8 @@
 }
 
 .set-concept-builder.dark-mode .archetype-status {
-  background: #3c3c3c;
-  border-color: #555;
+  background: rgba(138, 43, 226, 0.1);
+  border-color: rgba(186, 85, 211, 0.4);
 }
 
 .set-concept-builder.dark-mode .archetype-count {
@@ -532,16 +561,21 @@
   .concept-display {
     padding: 1.5rem;
     border-radius: 16px;
+    max-width: 100%;
+    margin: 0;
   }
   
   .concept-actions {
     flex-direction: column;
     gap: 1rem;
+    justify-content: center;
+    align-items: stretch;
   }
   
   .concept-actions button {
     width: 100%;
     padding: 1rem 1.5rem;
+    min-width: auto;
   }
   
   .proceed-button {
@@ -587,6 +621,8 @@
   .pitch-input-section,
   .concept-display {
     padding: 1.25rem;
+    max-width: 100%;
+    margin: 0;
   }
   
   .archetype-card {
@@ -599,6 +635,11 @@
   
   .concept-header p {
     font-size: 0.9rem;
+  }
+  
+  .generate-concept-button {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
   }
 }
 

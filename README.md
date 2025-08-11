@@ -29,7 +29,7 @@ A AI-powered tool for generating complete Magic: The Gathering sets by using des
 ### Prerequisites
 - Python 3.8+
 - Node.js 16+
-- OpenAI API key
+- OpenAI API key (entered through web interface)
 
 ### Installation
 
@@ -45,11 +45,8 @@ cd backend
 pip install -r requirements.txt
 ```
 
-3. **Create environment file:**
-Create a `.env` file in the backend directory:
-```env
-OPENAI_API_KEY=your_openai_api_key_here
-```
+3. **Get OpenAI API Key:**
+You'll need an OpenAI API key from [OpenAI Platform](https://platform.openai.com/api-keys). You'll enter this in the web interface when using the application.
 
 4. **Set up the frontend:**
 ```bash
@@ -78,18 +75,20 @@ npm start
 ### Set Builder Mode (Recommended)
 
 1. **Choose Set Builder** from the navigation
-2. **Enter your theme** (e.g., "Steampunk Inventors", "Underwater Civilization")
-3. **Generate cards** either:
+2. **Enter your OpenAI API key** in the provided field
+3. **Enter your theme** (e.g., "Steampunk Inventors", "Underwater Civilization")
+4. **Generate cards** either:
    - One at a time by clicking "Generate Card" on individual slots
    - All at once with "Generate All Cards"
-4. **Track progress** with the built-in progress bar
-5. **Export your set** in JSON, CSV, or Cockatrice format
+5. **Track progress** with the built-in progress bar
+6. **Export your set** in JSON, CSV, or Cockatrice format
 
 ### Quick Generator Mode
 
 1. **Choose Quick Generator** for rapid prototyping
-2. **Enter a theme** and generate commons instantly
-3. **Perfect for** initial concept testing and brainstorming
+2. **Enter your OpenAI API key** in the provided field
+3. **Enter a theme** and generate commons instantly
+4. **Perfect for** initial concept testing and brainstorming
 
 ## 🎨 Design Skeleton
 
@@ -130,7 +129,8 @@ Generate a single card for a specific slot.
   "color": "white",
   "rarity": "common", 
   "slot_id": "CW01",
-  "slot_data": { "mana_value": 1, "description": "1 MV" }
+  "slot_data": { "mana_value": 1, "description": "1 MV" },
+  "apiKey": "sk-..."
 }
 ```
 
@@ -138,7 +138,8 @@ Generate a single card for a specific slot.
 Generate all cards for a complete set.
 ```json
 {
-  "theme": "Underwater Civilization"
+  "theme": "Underwater Civilization",
+  "apiKey": "sk-..."
 }
 ```
 
